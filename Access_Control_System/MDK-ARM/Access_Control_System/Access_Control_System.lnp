@@ -1,0 +1,23 @@
+--cpu Cortex-M3
+"access_control_system\stm32f1xx_hal_flash_ex.o"
+"access_control_system\stm32f1xx_hal_uart.o"
+"access_control_system\stm32f1xx_hal_tim.o"
+"access_control_system\stm32f1xx_hal_gpio.o"
+"access_control_system\stm32f1xx_hal_flash.o"
+"access_control_system\stm32f1xx_hal_tim_ex.o"
+"access_control_system\stm32f1xx_hal_rcc.o"
+"access_control_system\stm32f1xx_hal_gpio_ex.o"
+"access_control_system\stm32f1xx_hal_rcc_ex.o"
+"access_control_system\stm32f1xx_hal.o"
+"access_control_system\stm32f1xx_hal_dma.o"
+"access_control_system\stm32f1xx_hal_cortex.o"
+"access_control_system\stm32f1xx_hal_pwr.o"
+"access_control_system\startup_stm32f103xb.o"
+"access_control_system\stm32f1xx_it.o"
+"access_control_system\stm32f1xx_hal_msp.o"
+"access_control_system\main.o"
+"access_control_system\system_stm32f1xx.o"
+--library_type=microlib --strict --scatter "Access_Control_System\Access_Control_System.sct"
+--diag_suppress=L6329 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "Access_Control_System.map" -o Access_Control_System\Access_Control_System.axf
