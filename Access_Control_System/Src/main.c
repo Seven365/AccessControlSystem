@@ -48,22 +48,22 @@ uint32_t Address = 0, PAGEError = 0;
 __IO uint32_t data32 = 0 , MemoryProgramStatus = 0;
 #if 1
 #pragma import(__use_no_semihosting)             
-//标准库需要的支持函数                 
+//Standard library required support function               
 struct __FILE 
 { 
 	int handle; 
 }; 
 
 FILE __stdout;       
-//定义_sys_exit()以避免使用半主机模式    
+// define _sys_exit()  
 void _sys_exit(int x) 
 { 
 	x = x; 
 } 
-//重定义fputc函数 
+//redifine fputc()
 int fputc(int ch, FILE *f)
 { 	
-	while((USART1->SR&0X40)==0);//循环发送,直到发送完毕   
+	while((USART1->SR&0X40)==0);//Loop send 
 	USART1->DR = (unsigned char ) ch;      
 	return ch;
 }
@@ -71,6 +71,8 @@ int fputc(int ch, FILE *f)
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+IWDG_HandleTypeDef hiwdg;
+
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
@@ -80,7 +82,7 @@ UART_HandleTypeDef huart2;
 /* Private variables ---------------------------------------------------------*/
 unsigned char string[] = "OK";
 uint8_t Uart1_RxBuffer[Buffersize];
-uint8_t Uart2_RxBuffer[Buffersize];  //串口接收缓存
+uint8_t Uart2_RxBuffer[Buffersize];  //uart recieve buff 
 uint8_t rec_flag1 = 0;
 uint8_t rec_flag2 = 0;
 uint8_t rec_flag3 = 0;
@@ -95,10 +97,11 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void IWDG_Feed(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -125,9 +128,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
+  MX_IWDG_Init();
 
   /* USER CODE BEGIN 2 */
-  /* 使能接收，进入中断回调函数 */
+  /* enable recieve  */
   HAL_UART_Receive_IT(&huart1,Uart1_RxBuffer,1);
   HAL_UART_Receive_IT(&huart2,Uart2_RxBuffer,1);
 	HAL_TIM_Base_Start_IT(&htim2);
@@ -224,10 +228,11 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -262,6 +267,20 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
+/* IWDG init function */
+static void MX_IWDG_Init(void)
+{
+
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 /* TIM2 init function */
 static void MX_TIM2_Init(void)
 {
@@ -272,7 +291,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 71;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 100;
+  htim2.Init.Period = 1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -347,28 +366,33 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_12 
+                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA4 PA5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+  /*Configure GPIO pins : PA0 PA1 PA4 PA5 
+                           PA6 PA7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5 
+                          |GPIO_PIN_6|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA6 PA7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+  /*Configure GPIO pins : PB0 PB1 PB2 PB12 
+                           PB13 PB14 PB15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_12 
+                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
 /*
-串口回调函数  可以被重定义  不可以被更改！ 
-用户重定义串口回调函数  
+uart callback function   can be redifined  should not be modified
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -423,6 +447,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		;
 	}
 }
+
+void IWDG_Feed(void)
+{
+	 HAL_IWDG_Refresh(&hiwdg);
+}
 /* USER CODE END 4 */
 
 /**
@@ -436,6 +465,7 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
+		printf("error!");
   }
   /* USER CODE END Error_Handler */ 
 }

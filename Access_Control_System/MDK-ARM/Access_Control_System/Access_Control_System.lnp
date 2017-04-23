@@ -12,6 +12,7 @@
 "access_control_system\stm32f1xx_hal_dma.o"
 "access_control_system\stm32f1xx_hal_cortex.o"
 "access_control_system\stm32f1xx_hal_pwr.o"
+"access_control_system\stm32f1xx_hal_iwdg.o"
 "access_control_system\startup_stm32f103xb.o"
 "access_control_system\stm32f1xx_it.o"
 "access_control_system\stm32f1xx_hal_msp.o"
