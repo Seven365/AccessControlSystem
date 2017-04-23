@@ -38,7 +38,7 @@
 
 #include "string.h"
 #define Buffersize 1
-#define FLASH_USER_START_ADDR   ADDR_FLASH_PAGE_48   /* Start @ of user Flash area */
+#define FLASH_USER_START_ADDR   ADDR_FLASH_PAGE_120   /* Start @ of user Flash area */
 #define FLASH_USER_END_ADDR     ADDR_FLASH_PAGE_127 + FLASH_PAGE_SIZE   /* End @ of user Flash area */
 
 #define DATA_32                 ((uint32_t)0x12345678)
@@ -78,7 +78,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-unsigned char string[] = "h";
+unsigned char string[] = "OK";
 uint8_t Uart1_RxBuffer[Buffersize];
 uint8_t Uart2_RxBuffer[Buffersize];  //´®¿Ú½ÓÊÕ»º´æ
 uint8_t rec_flag1 = 0;
@@ -189,6 +189,7 @@ int main(void)
   /*Check if there is an issue to program data*/
   if (MemoryProgramStatus == 0)
   {
+			HAL_UART_Transmit(&huart2,string,strlen((char *)string),1000);
     /* No error detected. Switch on LED2*/
   }
   else
