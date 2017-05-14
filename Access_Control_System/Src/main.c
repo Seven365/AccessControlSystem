@@ -35,7 +35,7 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "OLED.h"
 #include "string.h"
 #define Buffersize 1
 #define FLASH_USER_START_ADDR   ADDR_FLASH_PAGE_120   /* Start @ of user Flash area */
@@ -88,6 +88,7 @@ uint8_t rec_flag2 = 0;
 uint8_t rec_flag3 = 0;
 uint8_t rec_cnt = 0;
 uint8_t rec_buff[20] ={0};
+uint32_t ms_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,9 +129,11 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
-  MX_IWDG_Init();
+
 
   /* USER CODE BEGIN 2 */
+	OLED_Init();
+	Draw_LibLogo();
   /* enable recieve  */
   HAL_UART_Receive_IT(&huart1,Uart1_RxBuffer,1);
   HAL_UART_Receive_IT(&huart2,Uart2_RxBuffer,1);
@@ -138,6 +141,7 @@ int main(void)
 	printf("B\n");
 	HAL_Delay(100);
 	printf("A\n");
+	HAL_Delay(100);
 	/* Unlock the Flash to enable the flash control register access *************/
   HAL_FLASH_Unlock();
   /* Erase the user Flash area
@@ -200,7 +204,8 @@ int main(void)
   {
     /* Error detected. LED2 will blink with 1s period */
   }
-
+	
+  MX_IWDG_Init();  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -212,7 +217,12 @@ int main(void)
   /* USER CODE BEGIN 3 */
   // HAL_UART_Transmit(&huart1,string,strlen((char *)string),1000);
 	//	printf("hello\n");
-		HAL_Delay(100);
+	//	HAL_Delay(100);
+		if(ms_flag>=1000)
+		{
+			IWDG_Feed(); 
+			ms_flag = 0 ;
+		}
   }
   /* USER CODE END 3 */
 
@@ -444,7 +454,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim == &htim2)
 	{
-		;
+		ms_flag++;
 	}
 }
 
@@ -465,7 +475,9 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
+		unsigned char error_s[] = "error!";
 		printf("error!");
+		HAL_UART_Transmit(&huart2,error_s,strlen((char *)error_s),1000);
   }
   /* USER CODE END Error_Handler */ 
 }

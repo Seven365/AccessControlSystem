@@ -479,6 +479,11 @@
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>
             </File>
+            <File>
+              <FileName>OLED.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\OLED.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
